@@ -1,5 +1,7 @@
 # DJing in Latent Space
 
+> Extended from Google Magenta's [Melody Mixer](https://experiments.withgoogle.com/ai/melody-mixer) ([source](https://github.com/googlecreativelab/melody-mixer)), which is built on the [MusicVAE](https://magenta.tensorflow.org/music-vae) model.
+
 A browser-based, two-deck DJ instrument that navigates a **MusicVAE latent space** instead of mixing recorded audio. Pick a melody on each deck, and the crossfader moves through the space *between* them in real time, generating new melodies that exist between the two. The result is played through sampled piano in the browser, or sent out over MIDI to a **Yamaha Disklavier** acoustic piano.
 
 This is the software half of my M.S. thesis project at NYU Steinhardt (2025–2026). It is designed to be played from a custom MIDI DJ controller, but every control also works on screen.
@@ -116,22 +118,53 @@ Global: crossfader = CC 12, tempo = CC 10 (60–200 BPM), jog / scrub = CC 9 and
 | `data/density_vector.json`, `data/interval_vector.json` | Attribute vectors in latent space |
 | `data/density_variants.json`, `data/interval_variants.json` | Precomputed variants for 4 songs (Avril 14th, Galore, Veridis Quo, Rosalia), 11 levels per chunk |
 | `data/densityvector.py` | Script that computes the density attribute vector from a MIDI dataset |
+| `scripts/` | Scripts that extract chunks from a MIDI corpus, compute the interval vector, and generate the density and interval variants |
+| `package.json` | Node dependencies for the scripts (`npm install`) |
 | `data/*_validation.{csv,json}`, `data/song_stats.csv` | Validation results for the attribute vectors and interpolation |
 | `data/figures/` | Plots generated from the validation results (PNG + PDF) |
 | `data/piano/` | Local copy of the 88 piano samples |
 
-### Regenerating the density vector
+### Regenerating the attribute vectors and variants
 
-```bash
-pip install magenta pretty_midi numpy tqdm
-python3 data/densityvector.py \
-  --midi_dir /path/to/lakh_midi \
-  --checkpoint data/mel_small \
-  --output_dir data \
-  --max_files 5000
-```
+The `DEN` and `INT` knobs each use a direction in MusicVAE's latent space (`data/density_vector.json`, `data/interval_vector.json`) and per-chunk variants precomputed along it. Both vectors are built the same way: encode a corpus of 2-bar chunks, then take the mean latent vector of the top quartile for that attribute minus the mean of the bottom quartile (densest minus sparsest for density, widest-leaping minus most stepwise for interval).
 
-It extracts monophonic 2-bar chunks from a MIDI corpus, encodes them with the MusicVAE checkpoint, and takes the difference between the mean latent vector of the densest and sparsest quartiles of chunks as the "note density" direction.
+1. **Extract chunks** from a MIDI corpus such as Lakh MIDI:
+
+   ```bash
+   pip install pretty_midi tqdm
+   python3 scripts/extract_chunks_to_json.py \
+     --midi_dir /path/to/lakh_midi \
+     --output chunks.json \
+     --max_files 5000
+   ```
+
+2. **Density vector** (Python, uses Magenta):
+
+   ```bash
+   pip install magenta pretty_midi numpy tqdm
+   python3 data/densityvector.py \
+     --midi_dir /path/to/lakh_midi \
+     --checkpoint data/mel_small \
+     --output_dir data \
+     --max_files 5000
+   ```
+
+3. **Interval vector** (Node). The scripts load the checkpoint over HTTP, so serve the repo on port 8081 in a second terminal:
+
+   ```bash
+   npm install
+   python3 -m http.server 8081          # second terminal, from the repo root
+   node scripts/compute_interval_vector.js chunks.json
+   ```
+
+4. **Variants.** Each chunk of the four songs is encoded, shifted along the vector at 11 levels (one per knob position), and decoded:
+
+   ```bash
+   node scripts/compute_density_variants.js
+   node scripts/compute_interval_variants.js
+   ```
+
+   The density variants shift by up to ±2 times the density vector. The interval variants shift by up to ±15 times the interval vector by default, which can be changed with `MAX_SHIFT`, for example `MAX_SHIFT=6 node scripts/compute_interval_variants.js`.
 
 ## Limitations and ideas
 
@@ -140,7 +173,7 @@ This is a research prototype, and there are things I plan to improve:
 - **Bring your own melodies.** Only the four included songs are available. The `DEN` and `INT` variants are precomputed for them, so loading your own MIDI file or drawing a melody in a piano roll would also need those variants to be computed live.
 - **Simpler bass controls.** Bass Mode reuses the same knobs for the melody and the bass, which hides the bass controls behind a button.
 - **Combined attribute control.** `DEN` and `INT` currently don't combine, so only the one further from 50% is applied.
-- **`INT` at its extremes.** The interval variants are precomputed per chunk. Between roughly 20% and 80% the knob changes the melody smoothly, but near 0% and 100% the decoded melody collapses into a few notes, with very large leaps at 100%. Regenerating the variants with a smaller step size would fix this.
+- **`INT` at its extremes.** Between roughly 20% and 80% the knob changes the melody smoothly, but near 0% and 100% the decoded melody collapses into a few notes, with very large leaps at 100%. The interval variants shift each chunk by up to ±15 times the interval vector, about 2.6 times further in latent space than the density variants, which pushes the decoder outside the melodies it handles well. Regenerating them with a smaller `MAX_SHIFT` (see above) is the planned fix.
 - **Browser support.** Web MIDI is not available in Safari, so a hardware controller needs Chrome or Edge.
 
 ## Acknowledgments

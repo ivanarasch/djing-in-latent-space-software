@@ -1,0 +1,9 @@
+{
+  "name": "latent-djing-clean",
+  "private": true,
+  "description": "Scripts for regenerating the attribute vectors and variants",
+  "dependencies": {
+    "@magenta/music": "^1.23.1",
+    "node-fetch": "^2.7.0"
+  }
+}
