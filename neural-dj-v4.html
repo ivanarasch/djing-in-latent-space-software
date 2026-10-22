@@ -683,7 +683,6 @@ function togglePlay(dk){
   if(S.playing){
     S.playing=false;
     Tone.Transport.stop();
-    Tone.Transport.cancel();
     document.getElementById('btn-play-a').textContent='▶';
     document.getElementById('btn-play-b').textContent='▶';
     document.getElementById('ss').textContent='■ STOPPED';
