@@ -1,5 +1,5 @@
 {
-  "name": "latent-djing-clean",
+  "name": "djing-in-latent-space-software",
   "private": true,
   "description": "Scripts for regenerating the attribute vectors and variants",
   "dependencies": {

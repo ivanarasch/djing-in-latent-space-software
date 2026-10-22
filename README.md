@@ -6,10 +6,10 @@ A browser-based, two-deck DJ instrument that navigates a **MusicVAE latent space
 
 This is the software half of my M.S. thesis project at NYU Steinhardt (2025–2026). It is designed to be played from a custom MIDI DJ controller, but every control also works on screen.
 
-- **Live demo:** [ivanarasch.github.io/latent-djing-clean](https://ivanarasch.github.io/latent-djing-clean/neural-dj-v4.html) (use Chrome or Edge)
+- **Live demo:** [ivanarasch.github.io/djing-in-latent-space-software](https://ivanarasch.github.io/djing-in-latent-space-software/neural-dj-v4.html) (use Chrome or Edge)
 - **Portfolio page:** [ivanarasch.github.io/#thesis](https://ivanarasch.github.io/#thesis)
 - **Demo video:** [YouTube](https://www.youtube.com/watch?v=BHOvkIi4GPU)
-- **Controller hardware (KiCad PCBs, firmware, enclosure):** [Ivanita-s-DIY-DJ-Controller](https://github.com/ivanarasch/Ivanita-s-DIY-DJ-Controller)
+- **Controller hardware (KiCad PCBs, firmware, enclosure):** [djing-in-latent-space-hardware](https://github.com/ivanarasch/djing-in-latent-space-hardware)
 
 ## How it works
 
@@ -20,11 +20,11 @@ This is the software half of my M.S. thesis project at NYU Steinhardt (2025–20
 
 ## Running it
 
-The quickest way to try it is the [live demo](https://ivanarasch.github.io/latent-djing-clean/neural-dj-v4.html). To run your own copy, note that the page loads the model checkpoint and JSON data with `fetch()`, so it has to be served over HTTP (opening the file directly won't work).
+The quickest way to try it is the [live demo](https://ivanarasch.github.io/djing-in-latent-space-software/neural-dj-v4.html). To run your own copy, note that the page loads the model checkpoint and JSON data with `fetch()`, so it has to be served over HTTP (opening the file directly won't work).
 
 ```bash
-git clone https://github.com/ivanarasch/latent-djing-clean.git
-cd latent-djing-clean
+git clone https://github.com/ivanarasch/djing-in-latent-space-software.git
+cd djing-in-latent-space-software
 python3 -m http.server 8000
 ```
 
@@ -42,7 +42,7 @@ The demo is built around two decks, **A** (left) and **B** (right), with a cross
 
 ### Quick start
 
-1. Open the [live demo](https://ivanarasch.github.io/latent-djing-clean/neural-dj-v4.html) in Chrome or Edge and wait for the loading bar to reach "ready".
+1. Open the [live demo](https://ivanarasch.github.io/djing-in-latent-space-software/neural-dj-v4.html) in Chrome or Edge and wait for the loading bar to reach "ready".
 2. Pick a song on each deck from the dropdowns at the top (Avril 14th, Galore, Veridis Quo, Rosalia). Deck A starts on Avril 14th and deck B on Galore.
 3. Press **▶** on a deck to start playback. The piano rolls show the melody (top) and bass (bottom) for the current chunk.
 4. Move the **crossfader** between A and B. The melody morphs between the two decks' current chunks, and the readout (`α = 0.00` to `1.00`) shows how far you are along that path. At either end you hear that deck's own song. Press **LOOP** to hold the current chunk while you move it.
