@@ -4,6 +4,7 @@ A browser-based, two-deck DJ instrument that navigates a **MusicVAE latent space
 
 This is the software half of my M.S. thesis project at NYU Steinhardt (2025–2026). It is designed to be played from a custom MIDI DJ controller, but every control also works on screen.
 
+- **Live demo:** [ivanarasch.github.io/latent-djing-clean](https://ivanarasch.github.io/latent-djing-clean/neural-dj-v4.html) (use Chrome or Edge)
 - **Portfolio page:** [ivanarasch.github.io/#thesis](https://ivanarasch.github.io/#thesis)
 - **Demo video:** [YouTube](https://www.youtube.com/watch?v=BHOvkIi4GPU)
 - **Controller hardware (KiCad PCBs, firmware, enclosure):** [Ivanita-s-DIY-DJ-Controller](https://github.com/ivanarasch/Ivanita-s-DIY-DJ-Controller)
@@ -17,7 +18,7 @@ This is the software half of my M.S. thesis project at NYU Steinhardt (2025–20
 
 ## Running it
 
-The page loads the model checkpoint and JSON data with `fetch()`, so it has to be served over HTTP (opening the file directly won't work).
+The quickest way to try it is the [live demo](https://ivanarasch.github.io/latent-djing-clean/neural-dj-v4.html). To run your own copy, note that the page loads the model checkpoint and JSON data with `fetch()`, so it has to be served over HTTP (opening the file directly won't work).
 
 ```bash
 git clone https://github.com/ivanarasch/latent-djing-clean.git
