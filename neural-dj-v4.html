@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Lacquer&display=swap" rel="stylesheet">
 <script src="./libraries/musicvae.js"></script>
-<script src="./song-chunks.js?v=13"></script>
+<script src="./song-chunks.js?v=14"></script>
 <script>
 var densityVector = null;
 fetch('./data/density_vector.json')
@@ -26,7 +26,6 @@ fetch('./data/interval_variants.json')
   .then(v => { intervalVariants = v; console.log('interval variants loaded'); });
 </script>
 <script src="./libraries/tone.js"></script>
-<script src="./preset-melodies.js"></script>
 <script src="./libraries/StartAudioContext.js"></script>
 <style>
  
@@ -426,14 +425,10 @@ var deckSong={a:'Avril 14th', b:'Galore'};
 var loopIn=-1,loopOut=-1,inLoop={a:false,b:false};
 var deckVel={mel:{a:80,b:80},bass:{a:80,b:80}};
 var activeSong='a';
-const SONGS=['Song A Melody','Song B Melody','Avril 14th','Galore','DaftPunk','Veridis Quo','Rosalia','Twinkle','Sparse','Bounce'];
-const BM={'Song A Melody':'Song A Bass','Song B Melody':'Song B Bass'};
+const SONGS=['Avril 14th','Galore','Veridis Quo','Rosalia'];
 const CHUNK_MAP={
-  'Song A Melody': {mel:'SONG_A_MEL_CHUNKS', bass:'SONG_A_BASS_CHUNKS', sizes:null},
-  'Song B Melody': {mel:'SONG_B_MEL_CHUNKS', bass:'SONG_B_BASS_CHUNKS', sizes:null},
   'Avril 14th':    {mel:'AVRIL_MEL_CHUNKS',  bass:'AVRIL_BASS_CHUNKS',  sizes:'AVRIL_CHUNK_SIZES'},
   'Galore':        {mel:'GALORE_MEL_CHUNKS', bass:'GALORE_BASS_CHUNKS', sizes:'GALORE_CHUNK_SIZES'},
-  'DaftPunk':      {mel:'DAFTPUNK_MEL_CHUNKS', bass:'DAFTPUNK_BASS_CHUNKS', sizes:'DAFTPUNK_CHUNK_SIZES'},
   'Veridis Quo':   {mel:'VERIDIS_MEL_CHUNKS', bass:'VERIDIS_BASS_CHUNKS', sizes:'VERIDIS_CHUNK_SIZES'},
   'Rosalia':       {mel:'ROSALIA_MEL_CHUNKS', bass:'ROSALIA_BASS_CHUNKS', sizes:'ROSALIA_CHUNK_SIZES'},
 };
@@ -456,21 +451,9 @@ mb.initialize().then(()=>{S.br=true;setL(85,'interpolating...');if(S.mr)onR();})
  
 function onR(){
   setL(100,'ready');
-  interp();
   document.getElementById('ld-m').className='led g';
   const o=document.getElementById('lov');
   setTimeout(()=>{o.style.opacity='0';setTimeout(()=>o.style.display='none',600);},400);
-}
- 
-function interp(){
-  const sa=document.getElementById('sel-a').value||'Song A Melody';
-  const sb=document.getElementById('sel-b').value||'Song B Melody';
-  const mA=presetMelodies[sa],mB=presetMelodies[sb];
-  if(!mA||!mB)return;
-  S.seqs=mv.interpolate([mA,mB],NI);S.seqs[0]=mA;S.seqs[NI-1]=mB;
-  const bA=presetMelodies[BM[sa]||'Song A Bass'],bB=presetMelodies[BM[sb]||'Song B Bass'];
-  if(bA&&bB){S.bseqs=mb.interpolate([bA,bB],NI);S.bseqs[0]=bA;S.bseqs[NI-1]=bB;}
-  dRolls();uSteps();
 }
  
 var densitySeqs = {a: null, b: null};
@@ -633,9 +616,6 @@ function loadDeck(dk,sn){
     } else if(sn==='Rosalia' && typeof ROSALIA_BPM !== 'undefined'){
       onTempo(ROSALIA_BPM);
       document.querySelector('input.tv').value=ROSALIA_BPM;
-    } else if(sn==='DaftPunk' && typeof DAFTPUNK_BPM !== 'undefined'){
-      onTempo(DAFTPUNK_BPM);
-      document.querySelector('input.tv').value=DAFTPUNK_BPM;
     } else {
       onTempo(120);
       document.querySelector('input.tv').value=120;
@@ -1026,7 +1006,7 @@ function makeSeq(notes){
  
 function getChunks(song, type){
   var map=CHUNK_MAP[song];
-  if(!map) return window['SONG_A_MEL_CHUNKS'];
+  if(!map) return [];
   return window[map[type]]||[];
 }
  

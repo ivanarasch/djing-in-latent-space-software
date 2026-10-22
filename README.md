@@ -71,8 +71,7 @@ Global: crossfader = CC 12, tempo = CC 10 (60–200 BPM), jog / scrub = CC 9 and
 | Path | What it is |
 |---|---|
 | `neural-dj-v4.html` | The whole app: UI, playback, MIDI handling, and interpolation logic |
-| `song-chunks.js` | Melody and bass chunks for each song, as note data |
-| `preset-melodies.js` | Preset melodies used as the default endpoints |
+| `song-chunks.js` | Melody and bass chunks (and BPM) for the four songs, as note data |
 | `libraries/` | `musicvae.js` (Magenta.js), `tone.js`, `p5.js`, `StartAudioContext.js` |
 | `data/mel_small/` | MusicVAE `mel_2bar_small` checkpoint (256-d latent) |
 | `data/density_vector.json`, `data/interval_vector.json` | Attribute vectors in latent space |
