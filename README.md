@@ -182,8 +182,19 @@ This project builds directly on [Magenta](https://magenta.tensorflow.org/)'s **M
 
 - Roberts et al., *A Hierarchical Latent Vector Model for Learning Long-Term Structure in Music*, ICML 2018.
 - Magenta.js, Tone.js, and p5.js for the in-browser model, audio, and drawing.
-- The Lakh MIDI Dataset (Raffel, 2016) for computing the attribute vectors.
+- The [Lakh MIDI Dataset](https://colinraffel.com/projects/lmd/) (CC BY 4.0) for computing the attribute vectors. Colin Raffel. *Learning-Based Methods for Comparing Sequences, with Applications to Audio-to-MIDI Alignment and Matching.* PhD Thesis, 2016.
 
 Thank you to my thesis advisor, Dr. Magdalena Fuentes.
 
-Third-party code and assets in `libraries/`, `data/mel_small/`, `data/piano/`, and `data/images/` retain their original licenses (Magenta's Melody Mixer is released under Apache 2.0).
+## Songs
+
+The four songs on the decks are transcriptions of parts of existing music, used for research and demonstration. The compositions belong to their rights holders:
+
+- *Avril 14th* by Aphex Twin
+- *Veridis Quo* by Daft Punk
+- *Berghain* by Rosalía (listed as "Rosalia" on the deck)
+- *Galore* by Oklou
+
+## License
+
+Released under the [Apache License 2.0](LICENSE), the same license as Melody Mixer, which this project extends. Bundled libraries, data and their licenses are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). The song transcriptions in `song-chunks.js` are not covered by this license.
