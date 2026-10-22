@@ -12,7 +12,7 @@ This is the software half of my M.S. thesis project at NYU Steinhardt (2025–20
 ## How it works
 
 1. **Two decks, two melodies.** Each deck holds a song split into 2-bar chunks (32 steps each). Separate melody and bass models run in parallel.
-2. **Latent interpolation.** Both decks' current chunks are encoded by MusicVAE (`mel_2bar_small`, 256-dimensional latent space). The crossfader moves through 11 interpolation steps between the two points, and each step is decoded back into a playable melody. The endpoints are the original melodies, so the generated material is exploratory but stays anchored to music you recognize.
+2. **Latent interpolation.** Both decks' current chunks are encoded by MusicVAE (`mel_2bar_small`, 256-dimensional latent space). The crossfader moves through 11 interpolation steps between the two points, and each step is decoded back into a playable melody (heard while a deck is on LOOP). The endpoints are the original melodies, so the generated material is exploratory but stays anchored to music you recognize.
 3. **Attribute control.** The `DEN` (note density) and `INT` (average interval size) knobs reshape a chunk along a musical attribute while keeping the melody's character. Density is computed from an attribute vector in latent space (see [`data/densityvector.py`](data/densityvector.py)). Density and interval variants are also precomputed per chunk for fast, glitch-free playback (`data/density_variants.json`, `data/interval_variants.json`).
 4. **Performance layer.** Tempo, per-deck pitch / octave / note length / swing, velocity, hot cues, loop, and reverse sit on top of the generated material, the way they would on a conventional DJ controller.
 
@@ -33,6 +33,45 @@ Notes:
 - Click a deck's play button to start audio. Browsers block sound until you interact with the page.
 - Piano samples and the page font are loaded from the network at runtime, so you need an internet connection.
 - The on-screen controls work with a mouse. A MIDI controller is optional.
+
+## Using it
+
+The demo is built around two decks, **A** (left) and **B** (right), with a crossfader and tempo control in between. Each deck holds one song, split into 2-bar chunks.
+
+### Quick start
+
+1. Open the [live demo](https://ivanarasch.github.io/latent-djing-clean/neural-dj-v4.html) in Chrome or Edge and wait for the loading bar to reach "ready".
+2. Pick a song on each deck from the dropdowns at the top (Avril 14th, Galore, Veridis Quo, Rosalia). Deck A starts on Avril 14th and deck B on Galore.
+3. Press **▶** on a deck to start playback. The piano rolls show the melody (top) and bass (bottom) for the current chunk.
+4. Press **LOOP** on a deck, then move the **crossfader** between A and B. The melody morphs between the two decks' current chunks, and the readout (`α = 0.00` to `1.00`) shows how far you are along that path. With LOOP off, the crossfader hands playback over from deck A to deck B at the midpoint instead.
+5. Turn the knobs (drag up or down) to reshape the sound. Use **PREV / NEXT** to move through chunks.
+
+Only one deck sounds at a time: the *active* deck. Pressing a deck's ▶ or LOOP makes it active, and the crossfader switches it (left half is A, right half is B).
+
+### Controls
+
+| Control | What it does |
+|---|---|
+| **▶ / ■** | Start and stop playback. Press ▶ again to resume. |
+| **Crossfader** | Moves from deck A (`α = 0`) to deck B (`α = 1`) through 11 steps in latent space. The interpolated melody plays while a deck is on LOOP. |
+| **LOOP** | Holds the current chunk and plays the latent-space interpolation between the two decks. |
+| **PREV / NEXT** | Move to the previous or next 2-bar chunk. |
+| **CUE 1–4** | Tap an empty cue to save the current chunk (the button shows the chunk number). Tap it again to jump back. Double-click to clear. |
+| **REV** | Plays the chunk backwards. |
+| **Platter** | Drag up or down to scrub through steps. |
+| **Tempo slider** | Sets the BPM (60 to 200). The song's own tempo is loaded when you pick it. |
+| **VOL** | Note velocity for the deck. |
+| **OCT** | Octave shift, −2 to +2. |
+| **PCH** | Pitch shift, −12 to +12 semitones. |
+| **LEN** | Note length, as a percentage of each note's duration. |
+| **SWG** | Swing, which delays every other step. |
+| **DEN** | Note density. Low values thin the melody out and high values fill it in, using the density attribute vector. Melody only. |
+| **INT** | Average interval size between notes. 50% is the original melody, and turning it up gives noticeably wider leaps. Melody only. |
+| **BASS MODE** | Points that deck's knobs and VOL slider at the bass line instead of the melody. Press again to go back. |
+
+The `DEN` and `INT` knobs sit at 50% by default (no change). If both are moved, the one further from 50% is the one applied.
+
+The status bar at the bottom shows playback state, MIDI connection, the current step, and `α`. With a MIDI controller connected, every control above also responds to the mapping in the next section.
 
 ## MIDI mapping
 
@@ -93,6 +132,15 @@ python3 data/densityvector.py \
 ```
 
 It extracts monophonic 2-bar chunks from a MIDI corpus, encodes them with the MusicVAE checkpoint, and takes the difference between the mean latent vector of the densest and sparsest quartiles of chunks as the "note density" direction.
+
+## Limitations and ideas
+
+This is a research prototype, and there are things I plan to improve:
+
+- **Bring your own melodies.** Only the four included songs are available. The `DEN` and `INT` variants are precomputed for them, so loading your own MIDI file or drawing a melody in a piano roll would also need those variants to be computed live.
+- **Simpler bass controls.** Bass Mode reuses the same knobs for the melody and the bass, which hides the bass controls behind a button.
+- **Combined attribute control.** `DEN` and `INT` currently don't combine, so only the one further from 50% is applied.
+- **Browser support.** Web MIDI is not available in Safari, so a hardware controller needs Chrome or Edge.
 
 ## Acknowledgments
 
