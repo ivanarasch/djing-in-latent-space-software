@@ -322,7 +322,7 @@ input[type=range].cf::-webkit-slider-thumb{-webkit-appearance:none;width:12px;he
     </div>
     <div style="width:100%;">
       <div class="cf-lb"><span class="cf-la">A</span><span class="cf-lb2">B</span></div>
-      <input type="range" class="cf" id="cf" min="0" max="9" value="0" oninput="onCF(+this.value)">
+      <input type="range" class="cf" id="cf" min="0" max="10" value="0" oninput="onCF(+this.value)">
       <div class="cf-al" id="cfa">α = 0.00</div>
       <div class="sr" id="sr"></div>
     </div>
@@ -706,6 +706,8 @@ function togglePlay(dk){
 Tone.Transport.scheduleRepeat(()=>{
   if(!S.playing) return;
 
+  var csOf={}, sizeOf={};
+
   // Advance each deck's step counter independently
   ['a','b'].forEach(dk=>{
     var pos=deckPos[dk];
@@ -735,6 +737,15 @@ Tone.Transport.scheduleRepeat(()=>{
         updateChunkDisplay();
       }
     }
+    csOf[dk]=cs; sizeOf[dk]=chunkSize;
+  });
+
+  // both decks are on their new chunks: refresh the crossfader blend if needed
+  ensureBlend();
+
+  ['a','b'].forEach(dk=>{
+    var song=deckSong[dk];
+    var cs=csOf[dk], chunkSize=sizeOf[dk];
 
     // only play notes for the active deck
     if(activeSong!==dk) return;
@@ -742,9 +753,9 @@ Tone.Transport.scheduleRepeat(()=>{
     var mp=S.p.m[dk], bp=S.p.b[dk];
     var melNotes,bassNotes;
 
-    if((inLoop.a||inLoop.b)&&S.seqs&&S.seqs[S.step]){
+    if(blendOn()&&S.seqs&&S.seqs[S.step]){
       melNotes=S.seqs[S.step].notes||[];
-      bassNotes=S.bseqs&&S.bseqs[S.step]?S.bseqs[S.step].notes||[]:[];
+      bassNotes=S.bseqs&&S.bseqs[S.step]?S.bseqs[S.step].notes||[]:getChunks(song,'bass')[currentChunk[dk]]||[];
     } else {
       melNotes=getAttributeNotes(dk)||getChunks(song,'mel')[currentChunk[dk]]||[];
       bassNotes=getChunks(song,'bass')[currentChunk[dk]]||[];
@@ -762,13 +773,11 @@ Tone.Transport.scheduleRepeat(()=>{
     });
 
     // update display for active deck only
-    if(dk===activeSong){
-      S.sp=cs;
-      document.getElementById('sst').textContent=cs+'/'+chunkSize;
-      document.getElementById('hst').textContent=cs+'/'+chunkSize;
-      document.getElementById('spd-a').textContent=cs.toString().padStart(2,'0');
-      document.getElementById('spd-b').textContent=cs.toString().padStart(2,'0');
-    }
+    S.sp=cs;
+    document.getElementById('sst').textContent=cs+'/'+chunkSize;
+    document.getElementById('hst').textContent=cs+'/'+chunkSize;
+    document.getElementById('spd-a').textContent=cs.toString().padStart(2,'0');
+    document.getElementById('spd-b').textContent=cs.toString().padStart(2,'0');
   });
 },'16n');
  
@@ -838,13 +847,14 @@ function dRoll(id,notes,col,bg){
   ctx.fillRect((S.sp/N)*W,0,1.5,H);
 }
 function dRolls(){
+  ensureBlend();
   var ca=Math.max(0,currentChunk.a), cb=Math.max(0,currentChunk.b);
   var mA=getChunks(deckSong.a,'mel')[ca]||[];
   var mB=getChunks(deckSong.b,'mel')[cb]||[];
   var bA=getChunks(deckSong.a,'bass')[ca]||[];
   var bB=getChunks(deckSong.b,'bass')[cb]||[];
-  if((inLoop.a||inLoop.b)&&S.seqs&&S.seqs[S.step]){mA=S.seqs[S.step].notes||[];mB=mA;}
-  if((inLoop.a||inLoop.b)&&S.bseqs&&S.bseqs[S.step]){bA=S.bseqs[S.step].notes||[];bB=bA;}
+  if(blendOn()&&S.seqs&&S.seqs[S.step]){mA=S.seqs[S.step].notes||[];mB=mA;}
+  if(blendOn()&&S.bseqs&&S.bseqs[S.step]){bA=S.bseqs[S.step].notes||[];bB=bA;}
   dRoll('roll-a',mA,'#000000','#ffffff');
   dRoll('roll-b',mB,'#000000','#ffffff');
   dRoll('broll-a',bA,'#000000','#ffffff');
@@ -911,7 +921,7 @@ function onM(msg){const[st,cc,v]=msg.data;
   }
   if((st&0xf0)!==0xb0)return;
   if(cc===12){
-    const s=Math.round((v/127)*9);
+    const s=Math.round((v/127)*(NI-1));
     document.getElementById('cf').value=s;onCF(s);
   }
   if(cc===10)onTempo(Math.round((v/127)*140)+60);
@@ -952,7 +962,7 @@ function toggleLoop(dk) {
   dk = dk || activeSong;
   if(inLoop[dk]){
     inLoop[dk]=false;
-    if(!inLoop.a && !inLoop.b){ S.seqs=null; S.bseqs=null; }
+    if(!inLoop.a && !inLoop.b){ S.seqs=null; S.bseqs=null; S.sig=null; }
     currentChunk[dk]=deckPos[dk].chunk;
     document.getElementById('btn-loop-' + dk).classList.remove('active');
   } else {
@@ -1009,6 +1019,21 @@ function getChunks(song, type){
   return window[map[type]]||[];
 }
  
+// The crossfader blends the two decks whenever it sits between A and B (or a deck is on LOOP)
+function blendOn(){ return inLoop.a||inLoop.b||(S.step>0&&S.step<NI-1); }
+function blendSig(){
+  return [deckSong.a,deckSong.b,currentChunk.a,currentChunk.b,
+    S.p.m.a.den,S.p.m.a.int,S.p.m.b.den,S.p.m.b.int].join('|');
+}
+// Recompute the interpolation only when something it depends on has changed
+function ensureBlend(){
+  if(!S.mr||!S.br||!blendOn()) return;
+  var sig=blendSig();
+  if(sig===S.sig) return;
+  S.sig=sig;
+  S.seqs=null;S.bseqs=null;
+  reinterpolate();
+}
 function reinterpolate(){
   if(!S.mr||!S.br) return;
   var mA=getAttributeNotes('a')||getChunks(deckSong.a,'mel')[currentChunk.a]||[];
@@ -1043,7 +1068,7 @@ function setLoopOut(){
   document.getElementById('loop-display').textContent='loop: '+loopIn+'-'+loopOut+' [ON]';
 }
 function clearLoop(){
-  loopIn=-1;loopOut=-1;inLoop={a:false,b:false};S.seqs=null;S.bseqs=null;
+  loopIn=-1;loopOut=-1;inLoop={a:false,b:false};S.seqs=null;S.bseqs=null;S.sig=null;
   document.getElementById('loop-display').textContent='loop: off';
 }
 function updateChunkDisplay(){
